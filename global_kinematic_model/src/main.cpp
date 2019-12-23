@@ -21,7 +21,7 @@ VectorXd globalKinematic(const VectorXd &state,
 int main() {
   // [x, y, psi, v]
   VectorXd state(4);
-  // [delta, v]
+  // [delta, a]
   VectorXd actuators(2);
 
   state << 0, 0, deg2rad(45), 1;
@@ -35,15 +35,21 @@ int main() {
 
 VectorXd globalKinematic(const VectorXd &state, 
                          const VectorXd &actuators, double dt) {
+  // NOTE: state is [x, y, psi, v] and actuators is [delta, a]
+
+  double heading = state[2];
+  double vel = state[3];
+  double delta = actuators[0];
+  double accel = actuators[1];
+
   // Create a new vector for the next state.
   VectorXd next_state(state.size());
 
-  /**
-   * TODO: Implement the global kinematic model,
-   *   to return the next state from the inputs.
-   */
-
-  // NOTE: state is [x, y, psi, v] and actuators is [delta, a]
+  // x
+  next_state[0] = state[0] + vel*cos(heading)*dt;
+  next_state[1] = state[1] + vel*sin(heading)*dt;
+  next_state[2] = state[2] + delta*(vel/Lf)*dt;
+  next_state[3] = state[3] + accel*dt;
 
   return next_state;
 }
