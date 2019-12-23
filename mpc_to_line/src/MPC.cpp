@@ -55,15 +55,23 @@ class FG_eval {
     fg[0] = 0;
 
     // Reference State Cost
-    for (int t = 1; t < N; ++t) {
-      AD<double> cte = vars[t + y_start] - polyeval(coeffs, vars[t + x_start]);
-      AD<double> epsi = vars[t + psi_start] - polyderiveval(coeffs, vars[t + x_start]);
+    for (int t = 0; t < N; ++t) {
+      AD<double> cte = vars[t + cte_start];
+      AD<double> epsi = vars[t + epsi_start];
       AD<double> vel_err = vars[t + v_start] - ref_v;
       fg[0] += CppAD::pow(cte, 2);
       fg[0] += CppAD::pow(epsi, 2);
       fg[0] += CppAD::pow(vel_err, 2);
+    }
 
-      // TODO: add more cost functions
+    for (int t = 0; t < N - 1; ++t) {
+      fg[0] += CppAD::pow(vars[t + delta_start], 2);
+      fg[0] += CppAD::pow(vars[t + a_start], 2);
+    }
+
+    for (int t = 1; t < N - 1; ++t) {
+      fg[0] += CppAD::pow(vars[t + delta_start] - vars[t - 1 + delta_start], 2);
+      fg[0] += CppAD::pow(vars[t + a_start] - vars[t - 1 + a_start], 2);
     }
 
 
