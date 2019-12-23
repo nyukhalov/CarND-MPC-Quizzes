@@ -14,7 +14,7 @@ using std::vector;
 
 int main() {
   MPC mpc;
-  int iters = 100;
+  int iters = 70;
 
   VectorXd ptsx(2);
   VectorXd ptsy(2);

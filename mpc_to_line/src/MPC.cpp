@@ -9,8 +9,7 @@
 using CppAD::AD;
 using Eigen::VectorXd;
 
-// 3-second horizon
-size_t N = 60;
+size_t N = 25;
 double dt = 0.05; // 20 Hz
 
 // This value assumes the model presented in the classroom is used.
@@ -70,7 +69,7 @@ class FG_eval {
     }
 
     for (int t = 1; t < N - 1; ++t) {
-      fg[0] += CppAD::pow(vars[t + delta_start] - vars[t - 1 + delta_start], 2);
+      fg[0] += 100 * CppAD::pow(vars[t + delta_start] - vars[t - 1 + delta_start], 2);
       fg[0] += CppAD::pow(vars[t + a_start] - vars[t - 1 + a_start], 2);
     }
 
