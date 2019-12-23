@@ -4,15 +4,14 @@
 #include <cppad/ipopt/solve.hpp>
 #include <vector>
 #include "Eigen-3.3/Eigen/Core"
+#include "helpers.h"
 
 using CppAD::AD;
 using Eigen::VectorXd;
 
-/**
- * TODO: Set N and dt
- */
-size_t N = ? ;
-double dt = ? ;
+// 3-second horizon
+size_t N = 60;
+double dt = 0.05; // 20 Hz
 
 // This value assumes the model presented in the classroom is used.
 //
@@ -56,16 +55,20 @@ class FG_eval {
     fg[0] = 0;
 
     // Reference State Cost
-    /**
-     * TODO: Define the cost related the reference state and
-     *   anything you think may be beneficial.
-     */
+    for (int t = 1; t < N; ++t) {
+      AD<double> cte = vars[t + y_start] - polyeval(coeffs, vars[t + x_start]);
+      AD<double> epsi = vars[t + psi_start] - polyderiveval(coeffs, vars[t + x_start]);
+      AD<double> vel_err = vars[t + v_start] - ref_v;
+      fg[0] += CppAD::pow(cte, 2);
+      fg[0] += CppAD::pow(epsi, 2);
+      fg[0] += CppAD::pow(vel_err, 2);
+
+      // TODO: add more cost functions
+    }
 
 
     //
     // Setup Constraints
-    //
-    // NOTE: In this section you'll setup the model constraints.
 
     // Initial constraints
     //
@@ -81,28 +84,29 @@ class FG_eval {
 
     // The rest of the constraints
     for (int t = 1; t < N; ++t) {
-      /**
-       * TODO: Grab the rest of the states at t+1 and t.
-       *   We have given you parts of these states below.
-       */
-      AD<double> x1 = vars[x_start + t];
+      AD<double> x1     = vars[t + x_start];
+      AD<double> y1     = vars[t + y_start];
+      AD<double> psi1   = vars[t + psi_start];
+      AD<double> v1     = vars[t + v_start];
+      AD<double> cte1   = vars[t + cte_start];
+      AD<double> epsi1  = vars[t + epsi_start];
 
-      AD<double> x0 = vars[x_start + t - 1];
-      AD<double> psi0 = vars[psi_start + t - 1];
-      AD<double> v0 = vars[v_start + t - 1];
+      AD<double> x0         = vars[t - 1 + x_start];
+      AD<double> y0         = vars[t - 1 + y_start];
+      AD<double> psi0       = vars[t - 1 + psi_start];
+      AD<double> v0         = vars[t - 1 + v_start];
+      AD<double> delta0     = vars[t - 1 + delta_start];
+      AD<double> a0         = vars[t - 1 + a_start];
+      AD<double> epsi0      = vars[t - 1 + epsi_start];
+      AD<double> psidest0   = polyderiveval(coeffs, x0);
+      AD<double> fx0        = polyeval(coeffs, x0);
 
-      // Here's `x` to get you started.
-      // The idea here is to constraint this value to be 0.
-      //
-      // NOTE: The use of `AD<double>` and use of `CppAD`!
-      // CppAD can compute derivatives and pass these to the solver.
-
-      /**
-       * TODO: Setup the rest of the model constraints
-       */
-      
-      fg[1 + x_start + t] = x1 - (x0 + v0 * CppAD::cos(psi0) * dt);
-
+      fg[1 + t + x_start] = x1 - (x0 + v0 * CppAD::cos(psi0) * dt);
+      fg[1 + t + y_start] = y1 - (y0 + v0 * CppAD::sin(psi0) * dt);
+      fg[1 + t + psi_start] = psi1 - (psi0 + delta0 * (v0/Lf) * dt);
+      fg[1 + t + v_start] = v1 - (v0 + a0 * dt);
+      fg[1 + t + cte_start] = cte1 - (fx0 - y0 + v0 * CppAD::sin(epsi0) * dt);
+      fg[1 + t + epsi_start] = epsi1 - (epsi0 - psidest0 + delta0 * (v0/Lf) * dt);
     }
   }
 };

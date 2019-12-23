@@ -1,4 +1,5 @@
 #include <vector>
+#include <math.h>
 #include "Eigen-3.3/Eigen/QR"
 #include "helpers.h"
 #include "matplotlibcpp.h"
@@ -13,31 +14,28 @@ using std::vector;
 
 int main() {
   MPC mpc;
-  int iters = 50;
+  int iters = 100;
 
   VectorXd ptsx(2);
   VectorXd ptsy(2);
   ptsx << -100, 100;
   ptsy << -1, -1;
 
-  /**
-   * TODO: fit a polynomial to the above x and y coordinates
-   */
-  auto coeffs = ? ;
+  // fit a polynomial to the above x and y coordinates
+  auto coeffs = polyfit(ptsx, ptsy, 1);
+  cout << "Polynomial: " << endl << coeffs << endl;
 
+  // Initial state
   // NOTE: free feel to play around with these
   double x = -1;
   double y = 10;
   double psi = 0;
   double v = 10;
-  /**
-   * TODO: calculate the cross track error
-   */
-  double cte = ? ;
-  /**
-   * TODO: calculate the orientation error
-   */
-  double epsi = ? ;
+
+  // the current cross track error
+  double cte = polyeval(coeffs, x) - y;
+  // the current orientation error
+  double epsi = psi - atan(polyderiveval(coeffs, x));
 
   VectorXd state(6);
   state << x, y, psi, v, cte, epsi;
